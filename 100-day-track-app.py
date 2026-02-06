@@ -1,79 +1,104 @@
 import streamlit as st
 import time
+import random
 from datetime import datetime, timedelta
 
-st.set_page_config(page_title="100 Day Challenge", layout="wide")
+# 1. PAGE SETUP (Wide & Compact)
+st.set_page_config(page_title="100 Days Progress", layout="wide", initial_sidebar_state="collapsed")
 
-# --- 1. SETUP STATE ---
+# Custom CSS to shrink the button sizes so they fit on one screen
+st.markdown("""
+    <style>
+    div.stButton > button {
+        width: 100%;
+        padding: 5px;
+        font-size: 10px !important;
+    }
+    .metric-container { background-color: #f0f2f6; padding: 10px; border-radius: 10px; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# 2. STATE MANAGEMENT
 if 'ticks' not in st.session_state:
-    st.session_state.ticks = {}  # Store: {day_number: timestamp}
-if 'start_date' not in st.session_state:
-    st.session_state.start_date = datetime.now().date()
+    st.session_state.ticks = {}
+if 'user_name' not in st.session_state:
+    st.session_state.user_name = ""
 
-# --- 2. HEADER & COUNTDOWN ---
-st.title("🔥 100 Days of Greatness")
+# 3. USER ONBOARDING
+if not st.session_state.user_name:
+    with st.container():
+        name = st.text_input("Enter your name to begin:")
+        if st.button("Start My Journey"):
+            st.session_state.user_name = name
+            st.rerun()
+    st.stop()
 
-col1, col2, col3 = st.columns(3)
+# 4. MOTIVATION & HEADER
+quotes = [
+    "One day at a time.", "Believe you can and you're halfway there.",
+    "Don't stop until you're proud.", "Great things take time.",
+    "Small steps lead to big results."
+]
+
+st.title(f"🔥 Let's go {st.session_state.user_name}, you got this!")
+st.caption(f"💡 {random.choice(quotes)}")
+
+# 5. DASHBOARD METRICS (Timeline & Progress)
+col1, col2, col3 = st.columns([2, 1, 1])
+
+# Timeline Calculation
+start_date = datetime.now().date() # For this demo, starting today
+total_days = 100
+days_passed = len(st.session_state.ticks)
+progress_pct = days_passed / total_days
+
 with col1:
-    new_start = st.date_input("Challenge Start Date", st.session_state.start_date)
-    st.session_state.start_date = new_start
-
-# Calculate Countdown
-end_date = st.session_state.start_date + timedelta(days=100)
-days_left = (end_date - datetime.now().date()).days
+    st.write(f"**Journey Progress:** {days_passed}%")
+    st.progress(progress_pct)
+    # Timeline visualization
+    st.write(f"🚩 Start {'—' * 20} 🎯 Day 100")
 
 with col2:
-    st.metric("Days Completed", f"{len(st.session_state.ticks)} / 100")
+    if st.session_state.ticks:
+        last_tick = max(st.session_state.ticks.values())
+        diff = datetime.now() - last_tick
+        # Showing Hours, Minutes, AND Seconds
+        secs = int(diff.total_seconds())
+        st.metric("Time Since Last Tick", f"{secs // 3600}h {(secs % 3600) // 60}m {secs % 60}s")
+    else:
+        st.metric("Time Since Last Tick", "Ready?")
+
 with col3:
-    st.metric("Days Remaining", f"{max(0, days_left)}")
+    st.metric("Completion Rate", f"{days_passed}/100")
 
-st.progress(len(st.session_state.ticks) / 100)
-
-# --- 3. THE 100-DAY GRID ---
-st.write("### Your Progress Map")
-cols = st.columns(10) # 10x10 Grid
+# 6. THE 100-DAY COMPACT GRID
+st.write("### Progress Grid")
+# Using 20 columns to make it very short and avoid scrolling
+grid_cols = st.columns(20) 
 
 for i in range(1, 101):
-    with cols[(i-1) % 10]:
-        # Check if this day is already done
+    col_idx = (i-1) % 20
+    with grid_cols[col_idx]:
         is_done = i in st.session_state.ticks
         
+        # We use a toggle-like behavior: If clicked while done, it UNTICKS.
         if is_done:
-            # Display a "Checked" status
-            st.button(f"✅ Day {i}", key=f"day_{i}", disabled=True)
+            if st.button(f"✅{i}", key=f"d{i}", help="Click to untick"):
+                del st.session_state.ticks[i]
+                st.rerun()
         else:
-            # Display a clickable button for the current/next day
-            if st.button(f"Day {i}", key=f"day_{i}"):
-                # RECORD DATA
-                now = datetime.now()
-                st.session_state.ticks[i] = now
-                
-                # ANIMATION
+            if st.button(f"{i}", key=f"d{i}"):
+                st.session_state.ticks[i] = datetime.now()
                 st.balloons()
-                st.toast(f"Day {i} smashed! Keep going!")
-                time.sleep(0.5)
                 st.rerun()
 
-# --- 4. DATA & TIME ANALYSIS ---
-st.divider()
-st.subheader("⏳ Time Analysis")
-
-if len(st.session_state.ticks) > 1:
-    # Sort the days completed to find the gap between the last two
-    completed_days = sorted(st.session_state.ticks.keys())
-    last_day = completed_days[-1]
-    prev_day = completed_days[-2]
-    
-    time_gap = st.session_state.ticks[last_day] - st.session_state.ticks[prev_day]
-    
-    # Simple formatting for the time gap
-    hours, remainder = divmod(time_gap.total_seconds(), 3600)
-    minutes, _ = divmod(remainder, 60)
-    
-    st.info(f"It took you **{int(hours)}h {int(minutes)}m** between your last two ticks!")
-
-# Clock since last tick
+# 7. INTERVAL LOG
 if st.session_state.ticks:
-    last_tick_time = max(st.session_state.ticks.values())
-    since_last = datetime.now() - last_tick_time
-    st.write(f"⏱️ **Time since last tick:** {str(since_last).split('.')[0]}")
+    with st.expander("View Detailed Intervals"):
+        sorted_times = sorted(st.session_state.ticks.items())
+        for idx, (day, timestamp) in enumerate(sorted_times):
+            if idx > 0:
+                prev_time = sorted_times[idx-1][1]
+                gap = timestamp - prev_time
+                g_sec = int(gap.total_seconds())
+                st.write(f"Day {sorted_times[idx-1][0]} → Day {day}: {g_sec // 3600}h {(g_sec % 3600) // 60}m {g_sec % 60}s")
