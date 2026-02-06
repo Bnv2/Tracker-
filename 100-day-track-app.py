@@ -145,3 +145,41 @@ if len(st.session_state.ticks) >= 100:
     # Add a nice closing message
     st.confetti = True # Some custom streamers if supported
     st.success("Screenshot this! You earned it.")
+
+# --- DIGITAL BADGE ADD-ON ---
+    st.write("---")
+    
+    # Create the 'Fake' Screenshot look using HTML/CSS
+    # This creates a beautiful, shareable card layout
+    badge_html = f"""
+    <div style="
+        background: linear-gradient(135deg, #1e1e2f 0%, #4a90e2 100%);
+        padding: 40px;
+        border-radius: 20px;
+        border: 5px solid #FFD700;
+        text-align: center;
+        color: white;
+        font-family: 'Helvetica', sans-serif;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        max-width: 600px;
+        margin: auto;
+    ">
+        <h3 style="margin: 0; color: #FFD700; text-transform: uppercase; letter-spacing: 2px;">Official Achievement</h3>
+        <h1 style="font-size: 50px; margin: 10px 0;">100/100</h1>
+        <div style="font-size: 24px; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 20px;">
+            {st.session_state.user_name.upper()}
+        </div>
+        <p style="opacity: 0.8; font-style: italic;">"One Day at a Time"</p>
+        <div style="margin-top: 20px;">
+            <span style="background: #FFD700; color: black; padding: 5px 15px; border-radius: 50px; font-weight: bold;">
+                WARRIOR STATUS VERIFIED
+            </span>
+        </div>
+    </div>
+    """
+    
+    st.markdown(badge_html, unsafe_allow_html=True)
+    st.write("")
+    
+    # Guidance for the user
+    st.info("📸 **Mobile User?** Simply long-press or screenshot the card above! \n\n💻 **Desktop User?** Right-click the card and 'Save Image' or use the Print button below.")
