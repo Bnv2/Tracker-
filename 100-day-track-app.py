@@ -114,3 +114,32 @@ else:
                         st.session_state.ticks[i] = datetime.now()
                         st.balloons()
                         st.rerun()
+
+# --- THE GRAND FINALE CHECK ---
+if len(st.session_state.ticks) >= 100:
+    st.balloons() # Extra balloons for the win!
+    st.snow()     # Why not both? 
+    
+    st.markdown("<h1 style='text-align: center; color: #FFD700;'>🏆 CHALLENGE COMPLETE 🏆</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align: center;'>Congratulations, {st.session_state.user_name}!</h2>", unsafe_allow_html=True)
+    
+    # Calculate total duration of the 100 days
+    all_times = sorted(st.session_state.ticks.values())
+    total_duration = all_times[-1] - all_times[0]
+    days = total_duration.days
+    hours = total_duration.seconds // 3600
+    
+    st.write("---")
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.metric("Total Journey Time", f"{days} Days, {hours} Hours")
+    with col_b:
+        st.metric("Daily Consistency", "100%")
+        
+    st.success("You've officially completed the 100-Day Warrior Challenge. This is just the beginning!")
+    
+    if st.button("Back to Dashboard (View History)"):
+        # We can add a "back" button just in case you want to see your grid again
+        pass 
+    else:
+        st.stop() # Stops the rest of the app from loading, showing only the trophy screen
