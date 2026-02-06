@@ -114,32 +114,34 @@ else:
                         st.session_state.ticks[i] = datetime.now()
                         st.balloons()
                         st.rerun()
+# --- ADD-ON CELEBRATION LOGIC ---
 
-# --- THE GRAND FINALE CHECK ---
+# 1. Check if the user has reached the 100-tick goal
 if len(st.session_state.ticks) >= 100:
-    st.balloons() # Extra balloons for the win!
-    st.snow()     # Why not both? 
+    # Trigger the visual party
+    st.balloons()
+    st.snow()
     
-    st.markdown("<h1 style='text-align: center; color: #FFD700;'>🏆 CHALLENGE COMPLETE 🏆</h1>", unsafe_allow_html=True)
-    st.markdown(f"<h2 style='text-align: center;'>Congratulations, {st.session_state.user_name}!</h2>", unsafe_allow_html=True)
+    # Create a celebration overlay using a "Dialog" or a clean Header
+    st.markdown("---")
+    st.markdown("""
+        <div style="text-align: center; padding: 50px; background-color: #FFD700; border-radius: 20px;">
+            <h1 style="color: black; margin: 0;">🏆 100 DAYS COMPLETE! 🏆</h1>
+            <p style="color: black; font-size: 1.2rem;">Amazing discipline! You've officially finished the challenge.</p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Calculate total duration of the 100 days
-    all_times = sorted(st.session_state.ticks.values())
-    total_duration = all_times[-1] - all_times[0]
-    days = total_duration.days
-    hours = total_duration.seconds // 3600
+    # Calculate total duration for the summary
+    all_timestamps = sorted(st.session_state.ticks.values())
+    start_time = all_timestamps[0]
+    end_time = all_timestamps[-1]
+    total_delta = end_time - start_time
     
-    st.write("---")
-    col_a, col_b = st.columns(2)
-    with col_a:
-        st.metric("Total Journey Time", f"{days} Days, {hours} Hours")
-    with col_b:
-        st.metric("Daily Consistency", "100%")
-        
-    st.success("You've officially completed the 100-Day Warrior Challenge. This is just the beginning!")
+    st.write("") # Spacer
+    col_v1, col_v2 = st.columns(2)
+    col_v1.metric("Total Journey Time", f"{total_delta.days} Days")
+    col_v2.metric("Final Status", "WARRIOR MODE")
     
-    if st.button("Back to Dashboard (View History)"):
-        # We can add a "back" button just in case you want to see your grid again
-        pass 
-    else:
-        st.stop() # Stops the rest of the app from loading, showing only the trophy screen
+    # Add a nice closing message
+    st.confetti = True # Some custom streamers if supported
+    st.success("Screenshot this! You earned it.")
